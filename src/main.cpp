@@ -4,7 +4,7 @@ AUTOMATED HEATING SYSTEM FOR ORIGINAL PRUSA ENCLOSURE
 Originally written by user @lars and published on
 printables.com in august 2023.
 Updated in october 2023.
-V1.2
+V1.3
 ##########################################################
 */
 
@@ -18,8 +18,15 @@ V1.2
 // Values for the position of the servo while open and closed.
 // Needs to be changed to your specific setup, as cheap no-name servos
 // tend to vary a lot regarding its position to a given signal.
-#define SERVO_POS_OPEN 42
-#define SERVO_POS_CLOSED 100
+#define SERVO_POS_OPEN 65
+#define SERVO_POS_CLOSED 120
+
+// Different servos take different amounts of time to move to their destination.
+// Because I don't want the Servo jitter all the time, I'm "attaching" and
+// "detaching" with every move. The defined time here ist effectively a delay
+// which gives the servo time to move. If you need more than ~750ms, you should
+// expect the software to noticably "lag" when the servo is moving.
+#define SERVO_MOVING_MS 500
 
 // Definitions of pins on which buttons are connected
 #define BUTTON_SELECT 3
@@ -46,8 +53,8 @@ bool changeMode = false;
 
 int upperlimit;
 int lowerlimit;
-int caseTemp;
-int heaterTemp;
+int caseTemp = 0;
+int heaterTemp = 0;
 
 // Declaration of states of actuators
 bool heaterState = false;
@@ -246,7 +253,7 @@ void servoOpen() {
     display.display();
     servoState = true;
   }
-  delay(300);      // Allow Servo time to reach position
+  delay(SERVO_MOVING_MS);  // Allow Servo time to reach position
   servo.detach();  // Detach servo so that it wont try to move all the time
 }
 
@@ -262,7 +269,7 @@ void servoClose() {
     display.display();
     servoState = false;
   }
-  delay(300);      // Allow Servo time to reach position
+  delay(SERVO_MOVING_MS);  // Allow Servo time to reach position
   servo.detach();  // Detach servo so that it wont try to move all the time
 }
 
@@ -279,42 +286,68 @@ void checkForTempProblems() {
     heaterOff();
     fanOff();
     servoOpen();
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextColor(SH110X_WHITE);
-    display.setTextSize(3);
-    display.println(F("ERROR!"));
-    display.setTextSize(1);
-    display.println(F("Overtemp. detected."));
-    display.println(F("Shutting down heater."));
-    display.println(F("Please powercycle!"));
-    display.display();
     while (true) {
-      // Do nothing and get stuck here.
+      // Flash the error message and get stuck here.
       // This will cause the software to essentially stop
       // so that the heater can only be turned on again if
       // the user power-cycles the heating system.
+      display.clearDisplay();
+      display.setCursor(0, 0);
+      display.setTextColor(SH110X_WHITE);
+      display.setTextSize(3);
+      display.println(F("ERROR!"));
+      display.setTextSize(1);
+      display.println(F("Overtemp. detected."));
+      display.println(F("Shutting down heater."));
+      display.println(F("Please powercycle!"));
+      display.display();
+      delay(1000);
+      display.clearDisplay();
+      display.setCursor(0, 0);
+      display.fillRect(0, 0, 128, 64, SH110X_WHITE);
+      display.setTextColor(SH110X_BLACK);
+      display.setTextSize(3);
+      display.println(F("ERROR!"));
+      display.setTextSize(1);
+      display.println(F("Overtemp. detected."));
+      display.println(F("Shutting down heater."));
+      display.println(F("Please powercycle!"));
+      display.display();
+      delay(1000);
     }
   } else if (caseTemp <= -20 || heaterTemp <= -20) {
     heaterOff();
     fanOff();
     servoOpen();
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextColor(SH110X_WHITE);
-    display.setTextSize(3);
-    display.println(F("ERROR!"));
-    display.setTextSize(1);
-    display.println(F("Sensor error! Are"));
-    display.println(F("they wired correctly?"));
-    display.println(F("Shutting down heater."));
-    display.println(F("Please powercycle!"));
-    display.display();
     while (true) {
-      // Do nothing and get stuck here.
+      // Flash the error message and get stuck here.
       // This will cause the software to essentially stop
       // so that the heater can only be turned on again if
       // the user power-cycles the heating system.
+      display.clearDisplay();
+      display.setCursor(0, 0);
+      display.setTextColor(SH110X_WHITE);
+      display.setTextSize(3);
+      display.println(F("ERROR!"));
+      display.setTextSize(1);
+      display.println(F("Sensor error! Are"));
+      display.println(F("they wired correctly?"));
+      display.println(F("Shutting down heater."));
+      display.println(F("Please powercycle!"));
+      display.display();
+      delay(1000);
+      display.clearDisplay();
+      display.fillRect(0, 0, 128, 64, SH110X_WHITE);
+      display.setTextColor(SH110X_BLACK);
+      display.setTextSize(3);
+      display.println(F("ERROR!"));
+      display.setTextSize(1);
+      display.println(F("Sensor error! Are"));
+      display.println(F("they wired correctly?"));
+      display.println(F("Shutting down heater."));
+      display.println(F("Please powercycle!"));
+      display.display();
+      delay(1000);
     }
   }
 }
@@ -425,7 +458,6 @@ void setup() {
   // Initialize servo and move around
   servo.attach(SERVO_PIN);
   servoOpen();
-  servoClose();
 }
 
 void loop() {
