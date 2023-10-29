@@ -4,7 +4,7 @@ This repo contains the software for the Automated Heating System for the Origina
 
 Link to the model on Printables: https://www.printables.com/model/561491
 
-It is designed to run on an Arduino Nano (the orinal one with an ATMEGA328p), so it tries to uses little RAM while still being able to drive the 128x64px OLED display, which already eats up half of it.
+It is designed to run on an Arduino Nano (the original one with an ATMEGA328p), so it tries to uses little RAM while still being able to drive the 128x64px OLED display, which already eats up half of it.
 
 Enabling serial without reducing the buffer size may result in crashes, as there is not that much RAM free then.
 
