@@ -4,7 +4,7 @@ AUTOMATED HEATING SYSTEM FOR ORIGINAL PRUSA ENCLOSURE
 Originally written by user @lars and published on
 printables.com in august 2023.
 Updated in november 2023.
-V1.3.1
+V1.3.2
 ##########################################################
 
 *******************************************************
@@ -29,9 +29,9 @@ V1.3.1
 #include <configuration.h>
 
 // Declaration of variables
-int target = 20;   // initial target temperature
-int maxtemp = 45;  // target temperature limit
-int tolerance = 3; // set total tolerance for target temperature
+int target = 20;    // initial target temperature
+int maxtemp = 45;   // target temperature limit
+int tolerance = 3;  // set total tolerance for target temperature
 
 int upperlimit;
 int lowerlimit;
@@ -45,7 +45,8 @@ int heaterTemp = 0;
 #define MODE_FAN 3
 
 // Defining operatingMode as MODE_FAN as a little workaround, as it will get
-// increased by 1 while starting the first time, so it will actually begin in MODE_IDLE.
+// increased by 1 while starting the first time, so it will actually begin in
+// MODE_IDLE.
 byte operatingMode = MODE_FAN;
 bool changeMode = false;
 
@@ -59,20 +60,20 @@ bool closeServo = true;
 bool updateTarget = false;
 
 // Timing related variables
-#define TEMPERATURE_DELAY 100 // get Temperature every X second
+#define TEMPERATURE_DELAY 100  // get Temperature every X second
 uint32_t previousMillis;
 
 // Parameters of display
 #define i2c_Address 0x3c
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET -1    //   QT-PY / XIAO
+#define SCREEN_WIDTH 128  // OLED display width, in pixels
+#define SCREEN_HEIGHT 64  // OLED display height, in pixels
+#define OLED_RESET -1     //   QT-PY / XIAO
 Adafruit_SH1106G display =
     Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Parameters of thermosensors
-#define ONE_WIRE_BUS 5         // Pin used for temp sensors
-OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance
+#define ONE_WIRE_BUS 5          // Pin used for temp sensors
+OneWire oneWire(ONE_WIRE_BUS);  // Setup a oneWire instance
 DallasTemperature sensors(&oneWire);
 
 // OneWire device addresses of the thermometers as configured in configuration.h
@@ -130,37 +131,32 @@ const unsigned char PROGMEM logo24_idle[]{
 
 // Functions for drawing the individual symbols on the display.
 
-void drawHeatingSymbol()
-{
+void drawHeatingSymbol() {
   display.fillRect(97, 12, 24, 24, SH110X_BLACK);
   display.drawBitmap(97, 12, logo24_heat, 24, 24, SH110X_WHITE);
 }
-void drawCoolingSymbol()
-{
+void drawCoolingSymbol() {
   display.fillRect(97, 12, 24, 24, SH110X_BLACK);
   display.drawBitmap(97, 12, logo24_cool, 24, 24, SH110X_WHITE);
 }
-void drawFanSymbol()
-{
+void drawFanSymbol() {
   display.fillRect(97, 12, 24, 24, SH110X_BLACK);
   display.drawBitmap(97, 12, logo24_fan, 24, 24, SH110X_WHITE);
 }
-void drawIdleSymbol()
-{
+void drawIdleSymbol() {
   display.fillRect(97, 12, 24, 24, SH110X_BLACK);
   display.drawBitmap(97, 12, logo24_idle, 24, 24, SH110X_WHITE);
 }
 
 // Setup OLED display
 // This functions prints all the neccessary text on the display once.
-void display_prepare()
-{
+void display_prepare() {
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.clearDisplay();
 
   display.setCursor(0, 0);
-  display.print(F("Target:         Mode:"));
+  display.print(F("Target:        Mode:"));
   display.setCursor(0, 16);
   display.print(F("Case  :"));
   display.setCursor(0, 32);
@@ -173,10 +169,10 @@ void display_prepare()
   display.print(F("Vent:"));
 
   display.setTextSize(2);
-  display.setCursor(42, 0);
-  if(target < 100) {
-    display.print(" ");
-  }
+  display.setCursor(50, 0);
+  // if (target < 100) {
+  //   display.print(F(" "));
+  // }
   display.print(target);
   display.print(F("C"));
 
@@ -184,10 +180,8 @@ void display_prepare()
 }
 
 // Turn heater on and update display
-void heaterOn()
-{
-  if (heaterState != true)
-  {
+void heaterOn() {
+  if (heaterState != true) {
     digitalWrite(HEATER_PIN, HIGH);
     display.setTextSize(1);
     display.fillRect(48, 48, 30, 8, SH110X_BLACK);
@@ -199,10 +193,8 @@ void heaterOn()
 }
 
 // Turn heater off and update display
-void heaterOff()
-{
-  if (heaterState != false)
-  {
+void heaterOff() {
+  if (heaterState != false) {
     digitalWrite(HEATER_PIN, LOW);
     display.setTextSize(1);
     display.fillRect(48, 48, 30, 8, SH110X_BLACK);
@@ -214,10 +206,8 @@ void heaterOff()
 }
 
 // Turn fan on and update display
-void fanOn()
-{
-  if (fanState != true)
-  {
+void fanOn() {
+  if (fanState != true) {
     digitalWrite(FAN_PIN, HIGH);
     display.setTextSize(1);
     display.fillRect(48, 56, 30, 8, SH110X_BLACK);
@@ -229,10 +219,8 @@ void fanOn()
 }
 
 // Turn fan off and update display
-void fanOff()
-{
-  if (fanState != false)
-  {
+void fanOff() {
+  if (fanState != false) {
     digitalWrite(FAN_PIN, LOW);
     display.setTextSize(1);
     display.fillRect(48, 56, 30, 8, SH110X_BLACK);
@@ -244,12 +232,10 @@ void fanOff()
 }
 
 // Set position of servo to open flap
-void servoOpen()
-{
+void servoOpen() {
   servo.attach(SERVO_PIN);
   servo.write(SERVO_POS_OPEN);
-  if (servoState != true)
-  {
+  if (servoState != true) {
     display.setCursor(90, 56);
     display.setTextSize(1);
     display.fillRect(90, 56, 48, 8, SH110X_BLACK);
@@ -257,17 +243,15 @@ void servoOpen()
     display.display();
     servoState = true;
   }
-  delay(SERVO_MOVING_MS); // Allow Servo time to reach position
-  servo.detach();         // Detach servo so that it wont try to move all the time
+  delay(SERVO_MOVING_MS);  // Allow Servo time to reach position
+  servo.detach();  // Detach servo so that it wont try to move all the time
 }
 
 // Set position of servo to close flap
-void servoClose()
-{
+void servoClose() {
   servo.attach(SERVO_PIN);
   servo.write(SERVO_POS_CLOSED);
-  if (servoState != false)
-  {
+  if (servoState != false) {
     display.setCursor(90, 56);
     display.setTextSize(1);
     display.fillRect(90, 56, 48, 8, SH110X_BLACK);
@@ -275,8 +259,8 @@ void servoClose()
     display.display();
     servoState = false;
   }
-  delay(SERVO_MOVING_MS); // Allow Servo time to reach position
-  servo.detach();         // Detach servo so that it wont try to move all the time
+  delay(SERVO_MOVING_MS);  // Allow Servo time to reach position
+  servo.detach();  // Detach servo so that it wont try to move all the time
 }
 
 // Checks if there are any temperature related problems and turns off the
@@ -287,15 +271,13 @@ void servoClose()
 // for sensor-readings below -20°C, as I dont expect anyone actually trying to
 // use this system below that temperature. If you do, adjust the threshold
 // accordingly.
-void checkForTempProblems()
-{
-  if (caseTemp >= CASE_TEMP_OVERTEMP_LIMIT || heaterTemp >= HEATER_TEMP_OVERTEMP_LIMIT)
-  {
+void checkForTempProblems() {
+  if (caseTemp >= CASE_TEMP_OVERTEMP_LIMIT ||
+      heaterTemp >= HEATER_TEMP_OVERTEMP_LIMIT) {
     heaterOff();
     fanOff();
     servoOpen();
-    while (true)
-    {
+    while (true) {
       // Flash the error message and get stuck here.
       // This will cause the software to essentially stop
       // so that the heater can only be turned on again if
@@ -324,14 +306,12 @@ void checkForTempProblems()
       display.display();
       delay(1000);
     }
-  }
-  else if (caseTemp <= SENSOR_ERROR_UNDERTEMP || heaterTemp <= SENSOR_ERROR_UNDERTEMP)
-  {
+  } else if (caseTemp <= SENSOR_ERROR_UNDERTEMP ||
+             heaterTemp <= SENSOR_ERROR_UNDERTEMP) {
     heaterOff();
     fanOff();
     servoOpen();
-    while (true)
-    {
+    while (true) {
       // Flash the error message and get stuck here.
       // This will cause the software to essentially stop
       // so that the heater can only be turned on again if
@@ -366,87 +346,94 @@ void checkForTempProblems()
 }
 
 // Checks if buttons were pressed and set flags accordingly
-void checkButtons()
-{
+void checkButtons() {
   buttonUpState = !digitalRead(BUTTON_UP);
-  if (buttonUpState == true && prevButtonUpState == false)
-  {
+  if (buttonUpState == true && prevButtonUpState == false) {
     buttonUpPressed = true;
     prevButtonUpState = true;
-  }
-  else if (buttonUpState == false && prevButtonUpState == true)
-  {
+  } else if (buttonUpState == false && prevButtonUpState == true) {
     prevButtonUpState = false;
   }
 
   buttonDownState = !digitalRead(BUTTON_DOWN);
-  if (buttonDownState == true && prevButtonDownState == false)
-  {
+  if (buttonDownState == true && prevButtonDownState == false) {
     buttonDownPressed = true;
     prevButtonDownState = true;
-  }
-  else if (buttonDownState == false && prevButtonDownState == true)
-  {
+  } else if (buttonDownState == false && prevButtonDownState == true) {
     prevButtonDownState = false;
   }
 
   buttonSelectState = !digitalRead(BUTTON_SELECT);
-  if (buttonSelectState == true && prevButtonSelectState == false)
-  {
+  if (buttonSelectState == true && prevButtonSelectState == false) {
     buttonSelectPressed = true;
     prevButtonSelectState = true;
-  }
-  else if (buttonSelectState == false && prevButtonSelectState == true)
-  {
+  } else if (buttonSelectState == false && prevButtonSelectState == true) {
     prevButtonSelectState = false;
   }
 }
 
 // Gets temperature readings from the sensors and draws them on the display.
-void measureTemperatures()
-{
+void measureTemperatures() {
   sensors.requestTemperatures();
   caseTemp = sensors.getTempC(caseThermometer);
   heaterTemp = sensors.getTempC(heaterThermometer);
 
   // Show current temp on display
   display.fillRect(42, 16, 46, 32, SH110X_BLACK);
-  display.setCursor(42, 16);
   display.setTextSize(2);
-  if(caseTemp < 100) {
-    display.print(" ");
+
+  // The char buf[2] is a workaround.
+  // If any of the temperatures will be >=100, then
+  // the printed text will "collide" with something else on the display.
+  // To get around this, we print the first "1" alone at a position which
+  // is technically too far on the right, but because it's a narrow character,
+  // it looks good when it's at this position. This also results in not having
+  // to move any other text while supporting temperatures of 100°C and up.
+
+  if (caseTemp >= 100) {
+    display.setCursor(40, 16);
+    display.print(F("1"));
+    display.setCursor(50, 16);
+    char buf[2];
+    sprintf(buf, "%02d", caseTemp - 100);
+    display.print(buf);
+  } else {
+    display.setCursor(50, 16);
+    display.print(caseTemp);
   }
-  display.print(caseTemp);
-  display.print("C");
-  display.setCursor(42, 32);
-  if(heaterTemp < 100) {
-    display.print(" ");
+  display.print(F("C"));
+
+  if (heaterTemp >= 100) {
+    display.setCursor(40, 32);
+    display.print(F("1"));
+    display.setCursor(50, 32);
+    char buf[2];
+    sprintf(buf, "%02d", heaterTemp - 100);
+    display.print(buf);
+  } else {
+    display.setCursor(50, 32);
+    display.print(heaterTemp);
   }
-  display.print(heaterTemp);
-  display.print("C");
+  display.print(F("C"));
+
   display.setTextSize(1);
   display.display();
 }
 
 // Adjustment of target temperature
 // If up/down button was pressed, change target temp accordingly
-void updateTargetTemperature()
-{
-  if (buttonUpPressed == true)
-  {
+void updateTargetTemperature() {
+  if (buttonUpPressed == true) {
     target = target + 5;
-    if (target > maxtemp)
-    { // Limit target temperature to maxtemp
+    if (target > maxtemp) {  // Limit target temperature to maxtemp
       target = maxtemp;
     }
     updateTarget = true;
     buttonUpPressed = false;
   }
-  if (buttonDownPressed == true)
-  {
+  if (buttonDownPressed == true) {
     target = target - 5;
-    if (target < 0)
-    { // Limit target to positive temperatures
+    if (target < 0) {  // Limit target to positive temperatures
       target = 0;
     }
     updateTarget = true;
@@ -454,29 +441,36 @@ void updateTargetTemperature()
   }
 
   // Only write changes to display when something actually changed.
-  if (updateTarget == true)
-  {
+  if (updateTarget == true) {
     // As target changed, set new limits
     upperlimit = target + tolerance / 2;
     lowerlimit = target - tolerance / 2;
 
     // Remove old target temp from display
-    display.fillRect(42, 0, 42, 16, SH110X_BLACK);
+    display.fillRect(40, 0, 42, 16, SH110X_BLACK);
     display.setTextColor(SH110X_WHITE);
     display.setTextSize(2);
-    display.setCursor(42, 0);
-    if(target < 100) {
-    display.print(" ");
-  }
-    display.print(target);
-    display.print("C");
+    display.setCursor(50, 0);
+    // if ((caseTemp >= 100 || heaterTemp >= 100) && target < 100) {
+    //   display.print(F(" "));
+    // }
+    if (target >= 100) {
+      display.setCursor(40, 0);
+      display.print(F("1"));
+      display.setCursor(50, 0);
+      char buf[2];
+      sprintf(buf, "%02d", target - 100);
+      display.print(buf);
+    } else {
+      display.print(target);
+    }
+    display.print(F("C"));
     display.display();
-    updateTarget = false; // Reset flag
+    updateTarget = false;  // Reset flag
   }
 }
 
-void setup()
-{
+void setup() {
   // Initialize temperature sensors and set resolution to 9 bit
   sensors.begin();
   sensors.setResolution(caseThermometer, 9);
@@ -500,8 +494,7 @@ void setup()
   servoOpen();
 }
 
-void loop()
-{
+void loop() {
   // Check if any of the buttons were pressed
   checkButtons();
 
@@ -509,12 +502,11 @@ void loop()
   // check As this operation takes quite some time, we'll only do it every few
   // seconds. The temperature in the enclosure doesnt't change that fast
   // anyways.
-  if (millis() - previousMillis >= TEMPERATURE_DELAY)
-  {
+  if (millis() - previousMillis >= TEMPERATURE_DELAY) {
     previousMillis = millis();
 
-    measureTemperatures();  // get new temperatures from sensors
-    checkForTempProblems(); // check if temperatures are in safe range
+    measureTemperatures();   // get new temperatures from sensors
+    checkForTempProblems();  // check if temperatures are in safe range
 
     // This displays the current millis() on the display. It does not serve any
     // function besides telling me that the system is still alive. I needed this
@@ -532,11 +524,9 @@ void loop()
   }
 
   // If Select-button is pressed, change modes from 1 to 4
-  if (buttonSelectPressed)
-  {
+  if (buttonSelectPressed) {
     operatingMode++;
-    if (operatingMode > 3)
-    {
+    if (operatingMode > 3) {
       operatingMode = 0;
     }
     buttonSelectPressed = false;
@@ -546,8 +536,7 @@ void loop()
   /*******************************************************
   ################ IDLE MODE - DO NOTHING ################
   *******************************************************/
-  if (operatingMode == MODE_IDLE && changeMode == true)
-  {
+  if (operatingMode == MODE_IDLE && changeMode == true) {
     changeMode = false;
     drawIdleSymbol();
     servoClose();
@@ -558,10 +547,8 @@ void loop()
   // /*******************************************************
   // ##### HEATING MODE - HEATER ON, FAN ON, VENT CLOSED ####
   // *******************************************************/
-  if (operatingMode == MODE_HEATING)
-  {
-    if (changeMode == true)
-    {
+  if (operatingMode == MODE_HEATING) {
+    if (changeMode == true) {
       changeMode = false;
       drawHeatingSymbol();
       servoClose();
@@ -578,30 +565,23 @@ void loop()
     // randomly moves when the relays turn on, as they seem to interfere with
     // it.
 
-    if (caseTemp <= lowerlimit)
-    {
-      if (heaterState == false)
-      {
+    if (caseTemp <= lowerlimit) {
+      if (heaterState == false) {
         closeServo = true;
       }
       heaterOn();
       fanOn();
-      if (closeServo == true)
-      {
+      if (closeServo == true) {
         servoClose();
         closeServo = false;
       }
-    }
-    else if (caseTemp >= upperlimit)
-    {
-      if (heaterState == true)
-      {
+    } else if (caseTemp >= upperlimit) {
+      if (heaterState == true) {
         closeServo = true;
       }
       heaterOff();
       fanOff();
-      if (closeServo == true)
-      {
+      if (closeServo == true) {
         servoClose();
         closeServo = false;
       }
@@ -611,8 +591,7 @@ void loop()
   // /*******************************************************
   // ##### COOLING MODE - HEATER OFF, FAN ON, VENT OPEN #####
   // *******************************************************/
-  if (operatingMode == MODE_COOLING && changeMode == true)
-  {
+  if (operatingMode == MODE_COOLING && changeMode == true) {
     changeMode = false;
     drawCoolingSymbol();
     servoOpen();
@@ -623,8 +602,7 @@ void loop()
   // /*******************************************************
   // ###### FAN MODE - HEATER OFF, FAN ON, VENT CLOSED ######
   // *******************************************************/
-  if (operatingMode == MODE_FAN && changeMode == true)
-  {
+  if (operatingMode == MODE_FAN && changeMode == true) {
     changeMode = false;
     drawFanSymbol();
     servoClose();
