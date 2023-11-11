@@ -160,7 +160,7 @@ void display_prepare()
   display.clearDisplay();
 
   display.setCursor(0, 0);
-  display.print(F("Target:        Mode:"));
+  display.print(F("Target:         Mode:"));
   display.setCursor(0, 16);
   display.print(F("Case  :"));
   display.setCursor(0, 32);
@@ -173,7 +173,10 @@ void display_prepare()
   display.print(F("Vent:"));
 
   display.setTextSize(2);
-  display.setCursor(50, 0);
+  display.setCursor(42, 0);
+  if(target < 100) {
+    display.print(" ");
+  }
   display.print(target);
   display.print(F("C"));
 
@@ -347,6 +350,7 @@ void checkForTempProblems()
       delay(1000);
       display.clearDisplay();
       display.fillRect(0, 0, 128, 64, SH110X_WHITE);
+      display.setCursor(0, 0);
       display.setTextColor(SH110X_BLACK);
       display.setTextSize(3);
       display.println(F("ERROR!"));
@@ -406,12 +410,18 @@ void measureTemperatures()
   heaterTemp = sensors.getTempC(heaterThermometer);
 
   // Show current temp on display
-  display.fillRect(42, 16, 40, 32, SH110X_BLACK);
-  display.setCursor(50, 16);
+  display.fillRect(42, 16, 46, 32, SH110X_BLACK);
+  display.setCursor(42, 16);
   display.setTextSize(2);
+  if(caseTemp < 100) {
+    display.print(" ");
+  }
   display.print(caseTemp);
   display.print("C");
-  display.setCursor(50, 32);
+  display.setCursor(42, 32);
+  if(heaterTemp < 100) {
+    display.print(" ");
+  }
   display.print(heaterTemp);
   display.print("C");
   display.setTextSize(1);
@@ -451,10 +461,13 @@ void updateTargetTemperature()
     lowerlimit = target - tolerance / 2;
 
     // Remove old target temp from display
-    display.fillRect(50, 0, 35, 16, SH110X_BLACK);
+    display.fillRect(42, 0, 42, 16, SH110X_BLACK);
     display.setTextColor(SH110X_WHITE);
     display.setTextSize(2);
-    display.setCursor(50, 0);
+    display.setCursor(42, 0);
+    if(target < 100) {
+    display.print(" ");
+  }
     display.print(target);
     display.print("C");
     display.display();
