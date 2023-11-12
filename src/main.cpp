@@ -44,6 +44,7 @@ int upperlimit;
 int lowerlimit;
 int caseTemp = 0;
 int heaterTemp = 0;
+char temp_buf[3];
 
 // Definitions of names for operating modes. Just to make it more readable.
 #define MODE_IDLE 0
@@ -178,12 +179,12 @@ void display_prepare()
   display.print(F("Fan   : OFF"));
   display.setCursor(90, 48);
   display.print(F("Vent:"));
-
+  
+  //Print initial target temperature
   display.setTextSize(2);
   display.setCursor(42, 0);
-  char buf[3];
-    sprintf(buf, "%3d", target);
-    display.print(buf);
+  sprintf(temp_buf, "%3d", target);
+  display.print(temp_buf);
   display.print(scale);
 
   display.display();
@@ -424,13 +425,12 @@ void measureTemperatures()
   display.fillRect(42, 16, 46, 32, SH110X_BLACK);
   display.setCursor(42, 16);
   display.setTextSize(2);
-  char buf[3];
-    sprintf(buf, "%3d", caseTemp);
-    display.print(buf);
+  sprintf(temp_buf, "%3d", caseTemp);
+  display.print(temp_buf);
   display.print(scale);
   display.setCursor(42, 32);
-    sprintf(buf, "%3d", heaterTemp);
-    display.print(buf);
+  sprintf(temp_buf, "%3d", heaterTemp);
+  display.print(temp_buf);
   display.print(scale);
   display.setTextSize(1);
   display.display();
@@ -473,13 +473,8 @@ void updateTargetTemperature()
     display.setTextColor(SH110X_WHITE);
     display.setTextSize(2);
     display.setCursor(42, 0);
-    if(target < 100) {
-    display.print(" ");
-  }
-  if(target < 10) {
-    display.print(" ");
-  }
-    display.print(target);
+    sprintf(temp_buf, "%3d", target);
+    display.print(temp_buf);
     display.print(scale);
     display.display();
     updateTarget = false; // Reset flag
