@@ -29,9 +29,16 @@ V1.3.1
 #include <configuration.h>
 
 // Declaration of variables
-int target = 20;   // initial target temperature
-int maxtemp = 45;  // target temperature limit
-int tolerance = 3; // set total tolerance for target temperature
+// Do not set values here, they are set in configuration.h
+
+int target;   // initial target temperature
+int maxtemp;  // target temperature limit
+int tolerance; // set total tolerance for target temperature
+int undertemp; //set temperature limit for detecting faulty/missing sensors
+char scale; // set Celsius or Fahrenheit scale
+
+int caseovertemplimit = 0;
+int heaterovertemplimit = 0;
 
 int upperlimit;
 int lowerlimit;
@@ -174,11 +181,10 @@ void display_prepare()
 
   display.setTextSize(2);
   display.setCursor(42, 0);
-  if(target < 100) {
-    display.print(" ");
-  }
-  display.print(target);
-  display.print(F("C"));
+  char buf[3];
+    sprintf(buf, "%3d", target);
+    display.print(buf);
+  display.print(scale);
 
   display.display();
 }
@@ -283,13 +289,13 @@ void servoClose()
 // heating system accordingly. There are two different cases here: Overtemp and
 // sensor-error. Overtemp should be pretty self-explanatory, sensor error means
 // that the sensor reports values, that are obviously false. Normally they
-// report -127°C when they are not wired correctly or are defective, so we check
-// for sensor-readings below -20°C, as I dont expect anyone actually trying to
+// report -127°C (-196°F) when they are not wired correctly or are defective, so we check
+// for sensor-readings below -20°C (-4°F), as I dont expect anyone actually trying to
 // use this system below that temperature. If you do, adjust the threshold
 // accordingly.
 void checkForTempProblems()
 {
-  if (caseTemp >= CASE_TEMP_OVERTEMP_LIMIT || heaterTemp >= HEATER_TEMP_OVERTEMP_LIMIT)
+  if (caseTemp >= caseovertemplimit || heaterTemp >= heaterovertemplimit)
   {
     heaterOff();
     fanOff();
@@ -325,7 +331,7 @@ void checkForTempProblems()
       delay(1000);
     }
   }
-  else if (caseTemp <= SENSOR_ERROR_UNDERTEMP || heaterTemp <= SENSOR_ERROR_UNDERTEMP)
+  else if (caseTemp <= undertemp || heaterTemp <= undertemp)
   {
     heaterOff();
     fanOff();
@@ -350,7 +356,7 @@ void checkForTempProblems()
       delay(1000);
       display.clearDisplay();
       display.fillRect(0, 0, 128, 64, SH110X_WHITE);
-      display.setCursor(0, 0);
+      
       display.setTextColor(SH110X_BLACK);
       display.setTextSize(3);
       display.println(F("ERROR!"));
@@ -406,24 +412,26 @@ void checkButtons()
 void measureTemperatures()
 {
   sensors.requestTemperatures();
-  caseTemp = sensors.getTempC(caseThermometer);
-  heaterTemp = sensors.getTempC(heaterThermometer);
-
+  if(TEMPERATURE_SCALE_C == true) {
+    caseTemp = sensors.getTempC(caseThermometer);
+    heaterTemp = sensors.getTempC(heaterThermometer);
+  }
+  else {
+    caseTemp = sensors.getTempF(caseThermometer);
+    heaterTemp = sensors.getTempF(heaterThermometer);
+  }
   // Show current temp on display
   display.fillRect(42, 16, 46, 32, SH110X_BLACK);
   display.setCursor(42, 16);
   display.setTextSize(2);
-  if(caseTemp < 100) {
-    display.print(" ");
-  }
-  display.print(caseTemp);
-  display.print("C");
+  char buf[3];
+    sprintf(buf, "%3d", caseTemp);
+    display.print(buf);
+  display.print(scale);
   display.setCursor(42, 32);
-  if(heaterTemp < 100) {
-    display.print(" ");
-  }
-  display.print(heaterTemp);
-  display.print("C");
+    sprintf(buf, "%3d", heaterTemp);
+    display.print(buf);
+  display.print(scale);
   display.setTextSize(1);
   display.display();
 }
@@ -468,8 +476,11 @@ void updateTargetTemperature()
     if(target < 100) {
     display.print(" ");
   }
+  if(target < 10) {
+    display.print(" ");
+  }
     display.print(target);
-    display.print("C");
+    display.print(scale);
     display.display();
     updateTarget = false; // Reset flag
   }
@@ -482,6 +493,27 @@ void setup()
   sensors.setResolution(caseThermometer, 9);
   sensors.setResolution(heaterThermometer, 9);
   sensors.setWaitForConversion(false);
+
+  // Initialize Celsius or Fahrenheit values
+
+  if(TEMPERATURE_SCALE_C == true) {
+    caseovertemplimit = CASE_TEMP_OVERTEMP_LIMIT_C;
+    heaterovertemplimit = HEATER_TEMP_OVERTEMP_LIMIT_C;
+    target = INTIIAL_TARGET_C;
+    maxtemp = MAX_TEMP_SETTING_C;
+    undertemp = SENSOR_ERROR_UNDERTEMP_C;
+    tolerance = TOLERANCE_C;
+    scale = 'C';
+  }
+  else {
+    caseovertemplimit = CASE_TEMP_OVERTEMP_LIMIT_F;
+    heaterovertemplimit = HEATER_TEMP_OVERTEMP_LIMIT_F;
+    target = INTIIAL_TARGET_F;
+    maxtemp = MAX_TEMP_SETTING_F;
+    undertemp = SENSOR_ERROR_UNDERTEMP_F;
+    tolerance = TOLERANCE_F;
+    scale = 'F';
+  }
 
   // Initialize display and print basic information
   display.begin();

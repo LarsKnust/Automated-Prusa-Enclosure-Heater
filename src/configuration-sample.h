@@ -55,12 +55,34 @@ error! The address that's written here is just an example.
 // little higher than others. Just remember to check the maximum temperatures
 // of your materials, especially for the flap, as it gets directly hit with
 // hot air!
-#define CASE_TEMP_OVERTEMP_LIMIT 50
-#define HEATER_TEMP_OVERTEMP_LIMIT 100
 
-// Normally the temperature sensors  report -127°C when they are not wired
-// correctly or are defective, so we check for sensor-readings below -20°C,
+// Set TEMPERATURE_SCALE_C = false to enable Fahrenheit. Set 
+// CASE_TEMP_OVERTEMP_LIMIT_F and HEATER_TEMP_OVERTEMP_LIMIT_F to sane values
+// for your setup. Currently these closely match the Celsius settings.
+
+// NOTE: KEEP INITIAL_TARGET AND MAX_TEMP_SETTING VALUES IN 5 DEGREE INCREMENTS.
+// The program only changes in 5 degree steps.
+
+#define TEMPERATURE_SCALE_C true
+
+// Limits in Celsius
+#define CASE_TEMP_OVERTEMP_LIMIT_C 50
+#define HEATER_TEMP_OVERTEMP_LIMIT_C 100
+#define INTIIAL_TARGET_C 20
+#define MAX_TEMP_SETTING_C 45
+#define TOLERANCE_C 3
+
+//Limits in Fahrenheit
+#define CASE_TEMP_OVERTEMP_LIMIT_F 120
+#define HEATER_TEMP_OVERTEMP_LIMIT_F 210
+#define INTIIAL_TARGET_F 70
+#define MAX_TEMP_SETTING_F 115
+#define TOLERANCE_F 3
+
+// Normally the temperature sensors  report -127°C (-196°F) when they are not wired
+// correctly or are defective, so we check for sensor-readings below -20°C (-4°F),
 // as I dont expect anyone actually trying to use this system below that temperature.
 // If you do, adjust the threshold accordingly.
 // *** DO NOT ADJUST IF NOT NECCESSARY FOR YOUR SETUP ***
-#define SENSOR_ERROR_UNDERTEMP -20
+#define SENSOR_ERROR_UNDERTEMP_C -20
+#define SENSOR_ERROR_UNDERTEMP_F -4
