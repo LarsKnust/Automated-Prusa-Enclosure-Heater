@@ -494,7 +494,7 @@ void setup()
   if(TEMPERATURE_SCALE_C == true) {
     caseovertemplimit = CASE_TEMP_OVERTEMP_LIMIT_C;
     heaterovertemplimit = HEATER_TEMP_OVERTEMP_LIMIT_C;
-    target = INTIIAL_TARGET_C;
+    target = INITIAL_TARGET_C;
     maxtemp = MAX_TEMP_SETTING_C;
     undertemp = SENSOR_ERROR_UNDERTEMP_C;
     tolerance = TOLERANCE_C;
@@ -503,7 +503,7 @@ void setup()
   else {
     caseovertemplimit = CASE_TEMP_OVERTEMP_LIMIT_F;
     heaterovertemplimit = HEATER_TEMP_OVERTEMP_LIMIT_F;
-    target = INTIIAL_TARGET_F;
+    target = INITIAL_TARGET_F;
     maxtemp = MAX_TEMP_SETTING_F;
     undertemp = SENSOR_ERROR_UNDERTEMP_F;
     tolerance = TOLERANCE_F;

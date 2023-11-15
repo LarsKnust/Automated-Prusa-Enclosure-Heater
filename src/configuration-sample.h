@@ -68,14 +68,14 @@ error! The address that's written here is just an example.
 // Limits in Celsius
 #define CASE_TEMP_OVERTEMP_LIMIT_C 50
 #define HEATER_TEMP_OVERTEMP_LIMIT_C 100
-#define INTIIAL_TARGET_C 20
+#define INITIAL_TARGET_C 20
 #define MAX_TEMP_SETTING_C 45
 #define TOLERANCE_C 3
 
 //Limits in Fahrenheit
 #define CASE_TEMP_OVERTEMP_LIMIT_F 120
 #define HEATER_TEMP_OVERTEMP_LIMIT_F 210
-#define INTIIAL_TARGET_F 70
+#define INITIAL_TARGET_F 70
 #define MAX_TEMP_SETTING_F 115
 #define TOLERANCE_F 3
 
