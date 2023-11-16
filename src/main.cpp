@@ -605,7 +605,7 @@ void loop()
     display.display();
   }
 
-  if(millis() - previousMillis_serial >= SERIAL_RATE_MS) {
+  if(millis() - previousMillis_serial >= SERIAL_RATE_MS && SERIAL_LOGGING == true) {
 
     // Write a new line of serial data if the timer has elapsed.
     // This allows a different logging rate from the data reporting
