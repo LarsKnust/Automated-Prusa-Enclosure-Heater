@@ -571,6 +571,10 @@ void setup()
   if(SERIAL_LOGGING == true)
   {
     Serial.begin(115200);
+    // Since attaching a serial monitor resets the Arduino,
+    // we can use setup() to insert the column headers and the 
+    // monitor program will capture it.
+    Serial.println(F("Target Temp,Case Temp,Heater Temp,Mode"));
   }
 }
 
