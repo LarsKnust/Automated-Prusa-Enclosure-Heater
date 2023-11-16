@@ -44,7 +44,10 @@ int upperlimit;
 int lowerlimit;
 int caseTemp = 0;
 int heaterTemp = 0;
-char temp_buf[3];
+char temp_buf[4];
+char serial_temp_buf[4];
+char serial_mode_buf[5];
+char serial_output[17];
 
 // Definitions of names for operating modes. Just to make it more readable.
 #define MODE_IDLE 0
@@ -68,7 +71,8 @@ bool updateTarget = false;
 
 // Timing related variables
 #define TEMPERATURE_DELAY 100 // get Temperature every X second
-uint32_t previousMillis;
+uint32_t previousMillis_temp = 0;
+uint32_t previousMillis_serial = 0;
 
 // Parameters of display
 #define i2c_Address 0x3c
@@ -481,6 +485,43 @@ void updateTargetTemperature()
   }
 }
 
+void writeSerialData() {
+  //first clear the existing output string
+  serial_output[0] = '\0';
+  // then write the target temperature
+  sprintf(serial_temp_buf, "%3d", target);
+  strcat(serial_output, serial_temp_buf);
+  strcat(serial_output, ",");
+  // then write the case temperature
+  sprintf(serial_temp_buf, "%3d", caseTemp);
+  strcat(serial_output, serial_temp_buf);
+  strcat(serial_output, ",");
+  //then write the heater temperature
+  sprintf(serial_temp_buf, "%3d", heaterTemp);
+  strcat(serial_output, serial_temp_buf);
+  strcat(serial_output, ",");
+
+  // then write the mode setting
+  serial_mode_buf[0] = '\0';
+  if(operatingMode == MODE_IDLE)
+  {
+    strcat(serial_mode_buf, "IDLE");
+  }
+  else if(operatingMode == MODE_HEATING)
+  {
+    strcat(serial_mode_buf, "HEAT");
+  }
+  else if(operatingMode == MODE_COOLING)
+  {
+    strcat(serial_mode_buf, "COOL");
+  }
+  else if(operatingMode == MODE_FAN)
+  {
+    strcat(serial_mode_buf, " FAN");
+  }
+  strcat(serial_output, serial_mode_buf);
+  Serial.println(serial_output);
+}
 void setup()
 {
   // Initialize temperature sensors and set resolution to 9 bit
@@ -525,6 +566,12 @@ void setup()
   // Initialize servo and move around
   servo.attach(SERVO_PIN);
   servoOpen();
+
+  // Initialize serial for logging purposes.
+  if(SERIAL_LOGGING == true)
+  {
+    Serial.begin(115200);
+  }
 }
 
 void loop()
@@ -536,9 +583,9 @@ void loop()
   // check As this operation takes quite some time, we'll only do it every few
   // seconds. The temperature in the enclosure doesnt't change that fast
   // anyways.
-  if (millis() - previousMillis >= TEMPERATURE_DELAY)
+  if (millis() - previousMillis_temp >= TEMPERATURE_DELAY)
   {
-    previousMillis = millis();
+    previousMillis_temp = millis();
 
     measureTemperatures();  // get new temperatures from sensors
     checkForTempProblems(); // check if temperatures are in safe range
@@ -556,6 +603,17 @@ void loop()
     display.print(millis());
 #endif
     display.display();
+  }
+
+  if(millis() - previousMillis_serial >= SERIAL_RATE_MS) {
+
+    // Write a new line of serial data if the timer has elapsed.
+    // This allows a different logging rate from the data reporting
+    // rate so that logging is not tied to the system's "response rate."
+    
+    previousMillis_serial = millis();
+
+    writeSerialData();
   }
 
   // If Select-button is pressed, change modes from 1 to 4
