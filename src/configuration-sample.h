@@ -83,10 +83,6 @@ error! The address that's written here is just an example.
 #define MAX_TEMP_SETTING_C 45
 #define TOLERANCE_C 3
 
-
-// Definition of whether to use serial output logging or not.
-
-#define SERIAL_LOGGING true
 //Limits in Fahrenheit
 #define CASE_TEMP_OVERTEMP_LIMIT_F 120
 #define HEATER_TEMP_OVERTEMP_LIMIT_F 210
