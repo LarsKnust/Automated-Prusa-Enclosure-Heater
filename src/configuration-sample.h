@@ -58,7 +58,7 @@ error! The address that's written here is just an example.
 // Data format is Temp Target, Case Temp, Heater Temp, Mode, e.g., 30, 25,100,HEAT
 
 #define SERIAL_LOGGING false
-#define SERIAL_RATE_MS 5000
+#define SERIAL_RATE_MS 10000
 
 
 // Definitions of temperatures which will trip overtemperatures errors.
