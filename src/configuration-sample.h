@@ -53,7 +53,7 @@ error! The address that's written here is just an example.
 // Definition of whether to use serial output logging or not, and how many
 // milliseconds between each write.
 // Since the temperature doesn't change quickly, default is 10 seconds per write.
-// ALERT: Attaching a serial monitor to collect data will auto-reset the Arduino Nano.
+// WARNING: Opening a serial monitor to collect data will auto-reset the Arduino Nano in most cases.
 // Connect the logger before setting any temperatures or modes or they'll be reset.
 // Data format is Temp Target, Case Temp, Heater Temp, Mode, e.g., 30, 25,100,HEAT
 

@@ -4,7 +4,7 @@ AUTOMATED HEATING SYSTEM FOR ORIGINAL PRUSA ENCLOSURE
 Originally written by user @lars and published on
 printables.com in august 2023.
 Updated in november 2023.
-V1.3.1
+V1.4
 ##########################################################
 
 *******************************************************
@@ -12,7 +12,8 @@ V1.3.1
 ** configuration.h (REMOVE THE -sample) TO USE THIS  **
 ** SOFTWARE. IT WILL NOT WORK WIHTOUT RENAMING!      **
 *******************************************************
-
+**    ALSO: GO AND CONFIGURE YOUR SETUP IN THERE!    **
+*******************************************************
 */
 
 // Include neccessary libraries
