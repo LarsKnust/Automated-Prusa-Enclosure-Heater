@@ -50,6 +50,17 @@ error! The address that's written here is just an example.
 #define FAN_PIN 6
 #define SERVO_PIN 9
 
+// Definition of whether to use serial output logging or not, and how many
+// milliseconds between each write.
+// Since the temperature doesn't change quickly, default is 10 seconds per write.
+// ALERT: Attaching a serial monitor to collect data will auto-reset the Arduino Nano.
+// Connect the logger before setting any temperatures or modes or they'll be reset.
+// Data format is Temp Target, Case Temp, Heater Temp, Mode, e.g., 30, 25,100,HEAT
+
+#define SERIAL_LOGGING false
+#define SERIAL_RATE_MS 10000
+
+
 // Definitions of temperatures which will trip overtemperatures errors.
 // Needs to be adjusted to your heater, as some heaters will heat the air a
 // little higher than others. Just remember to check the maximum temperatures
