@@ -141,6 +141,19 @@ const unsigned char PROGMEM logo24_idle[]{
     0x11, 0x14, 0x20, 0x21, 0x14, 0x20, 0x7d, 0x17, 0x38, 0x01, 0x14, 0x20,
     0x01, 0xf4, 0x20, 0x00, 0x00, 0x00, 0x01, 0xff, 0xfc, 0x00, 0x00, 0x00};
 
+// Error messages
+#define TEMP_ERROR 0 
+#define SENSOR_ERROR 1
+
+const uint8_t err_lines_len = 2;
+static const char temp_err_1[] PROGMEM = {"Overtemp. detected."};
+static const char temp_err_2[] PROGMEM = {""};
+static const char *const temp_err_table[] PROGMEM = {temp_err_1, temp_err_2};
+
+static const char sensor_err_1[] PROGMEM = {"Sensor error! Are"};
+static const char sensor_err_2[] PROGMEM = {"they wired correctly?"};
+static const char *const sensor_err_table[] PROGMEM = {sensor_err_1, sensor_err_2};
+
 // Functions for drawing the individual symbols on the display.
 
 void drawHeatingSymbol()
@@ -291,6 +304,44 @@ void servoClose()
   servo.detach();         // Detach servo so that it wont try to move all the time
 }
 
+// Flash the error message and get stuck here.
+// This will cause the software to essentially stop
+// so that the heater can only be turned on again if
+// the user power-cycles the heating system.
+void showError(byte err_text_mode)
+{
+  heaterOff();
+  fanOff();
+  servoOpen();
+  bool is_black = true;
+  while (true)
+  {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    if (is_black == true)  {
+      display.setTextColor(SH110X_WHITE);
+    } else {
+      display.fillRect(0, 0, 128, 64, SH110X_WHITE);
+      display.setTextColor(SH110X_BLACK);
+    }
+    display.setTextSize(3);
+    display.println(F("ERROR!"));
+    display.setTextSize(1);
+    for (uint8_t i=0; i < err_lines_len; i++) {
+      if (err_text_mode == TEMP_ERROR){
+        display.println(reinterpret_cast<const __FlashStringHelper *>(temp_err_table[i]));
+      } else if (err_text_mode == SENSOR_ERROR) {
+        display.println(reinterpret_cast<const __FlashStringHelper *>(sensor_err_table[i]));
+      }
+    }
+    display.println(F("Shutting down heater."));
+    display.println(F("Please powercycle!"));
+    display.display();
+    is_black = !is_black;
+    delay(1000);
+  }
+}
+
 // Checks if there are any temperature related problems and turns off the
 // heating system accordingly. There are two different cases here: Overtemp and
 // sensor-error. Overtemp should be pretty self-explanatory, sensor error means
@@ -303,77 +354,11 @@ void checkForTempProblems()
 {
   if (caseTemp >= caseovertemplimit || heaterTemp >= heaterovertemplimit)
   {
-    heaterOff();
-    fanOff();
-    servoOpen();
-    while (true)
-    {
-      // Flash the error message and get stuck here.
-      // This will cause the software to essentially stop
-      // so that the heater can only be turned on again if
-      // the user power-cycles the heating system.
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextColor(SH110X_WHITE);
-      display.setTextSize(3);
-      display.println(F("ERROR!"));
-      display.setTextSize(1);
-      display.println(F("Overtemp. detected."));
-      display.println(F("Shutting down heater."));
-      display.println(F("Please powercycle!"));
-      display.display();
-      delay(1000);
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.fillRect(0, 0, 128, 64, SH110X_WHITE);
-      display.setTextColor(SH110X_BLACK);
-      display.setTextSize(3);
-      display.println(F("ERROR!"));
-      display.setTextSize(1);
-      display.println(F("Overtemp. detected."));
-      display.println(F("Shutting down heater."));
-      display.println(F("Please powercycle!"));
-      display.display();
-      delay(1000);
-    }
+    showError(TEMP_ERROR);
   }
   else if (caseTemp <= undertemp || heaterTemp <= undertemp)
   {
-    heaterOff();
-    fanOff();
-    servoOpen();
-    while (true)
-    {
-      // Flash the error message and get stuck here.
-      // This will cause the software to essentially stop
-      // so that the heater can only be turned on again if
-      // the user power-cycles the heating system.
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.setTextColor(SH110X_WHITE);
-      display.setTextSize(3);
-      display.println(F("ERROR!"));
-      display.setTextSize(1);
-      display.println(F("Sensor error! Are"));
-      display.println(F("they wired correctly?"));
-      display.println(F("Shutting down heater."));
-      display.println(F("Please powercycle!"));
-      display.display();
-      delay(1000);
-      display.clearDisplay();
-      display.fillRect(0, 0, 128, 64, SH110X_WHITE);
-      
-      display.setTextColor(SH110X_BLACK);
-      display.setTextSize(3);
-      display.println(F("ERROR!"));
-      display.setTextSize(1);
-      display.println(F("Sensor error! Are"));
-      display.println(F("they wired correctly?"));
-      display.println(F("Shutting down heater."));
-      display.println(F("Please powercycle!"));
-      display.display();
-      delay(1000);
-    }
+    showError(SENSOR_ERROR);
   }
 }
 
@@ -523,6 +508,7 @@ void writeSerialData() {
   strcat(serial_output, serial_mode_buf);
   Serial.println(serial_output);
 }
+
 void setup()
 {
   // Initialize temperature sensors and set resolution to 9 bit
