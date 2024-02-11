@@ -56,15 +56,14 @@ char serial_output[17];
 #define MODE_COOLING 2
 #define MODE_FAN 3
 
-// Defining operatingMode as MODE_FAN as a little workaround, as it will get
-// increased by 1 while starting the first time, so it will actually begin in MODE_IDLE.
-byte operatingMode = MODE_FAN;
-bool changeMode = false;
+byte operatingMode = MODE_IDLE;
+// Setup MODE_IDLE after startup
+bool changeMode = true;
 
 // Declaration of states of actuators
 bool heaterState = false;
 bool fanState = false;
-bool servoState = false;
+bool servoState = false; // Servo closed
 bool closeServo = true;
 
 // Flags for recurring events
@@ -93,21 +92,11 @@ DeviceAddress caseThermometer = {CASE_THERMOMETER_ADDRESS};
 DeviceAddress heaterThermometer = {HEATER_THERMOMETER_ADDRESS};
 
 // Variables for button states
-bool buttonUpState = false;
-bool prevButtonUpState = false;
-bool buttonUpPressed = false;
-
-bool buttonDownState = false;
-bool prevButtonDownState = false;
-bool buttonDownPressed = false;
-
-bool buttonSelectState = false;
-bool prevButtonSelectState = false;
-bool buttonSelectPressed = true;
+byte prevButtonPressed = 0;
+byte buttonPressed = 0;
 
 // Definition of servo-object and initialization of its position
 Servo servo;
-int servopos = 0;
 
 // Bitmap-icons for heating, cooling and fan, stored in PROGMEM
 
@@ -211,61 +200,57 @@ void display_prepare()
 // Turn heater on and update display
 void heaterOn()
 {
-  if (heaterState != true)
-  {
-    digitalWrite(HEATER_PIN, HIGH);
-    display.setTextSize(1);
-    display.fillRect(48, 48, 30, 8, SH110X_BLACK);
-    display.setCursor(48, 48);
-    display.print(F("ON"));
-    display.display();
-    heaterState = true;
-  }
+  if (heaterState == true) return;
+
+  digitalWrite(HEATER_PIN, HIGH);
+  display.setTextSize(1);
+  display.fillRect(48, 48, 30, 8, SH110X_BLACK);
+  display.setCursor(48, 48);
+  display.print(F("ON"));
+  display.display();
+  heaterState = true;
 }
 
 // Turn heater off and update display
 void heaterOff()
 {
-  if (heaterState != false)
-  {
-    digitalWrite(HEATER_PIN, LOW);
-    display.setTextSize(1);
-    display.fillRect(48, 48, 30, 8, SH110X_BLACK);
-    display.setCursor(48, 48);
-    display.print(F("OFF"));
-    display.display();
-    heaterState = false;
-  }
+  if (heaterState == false) return;
+
+  digitalWrite(HEATER_PIN, LOW);
+  display.setTextSize(1);
+  display.fillRect(48, 48, 30, 8, SH110X_BLACK);
+  display.setCursor(48, 48);
+  display.print(F("OFF"));
+  display.display();
+  heaterState = false;
 }
 
 // Turn fan on and update display
 void fanOn()
 {
-  if (fanState != true)
-  {
-    digitalWrite(FAN_PIN, HIGH);
-    display.setTextSize(1);
-    display.fillRect(48, 56, 30, 8, SH110X_BLACK);
-    display.setCursor(48, 56);
-    display.print(F("ON"));
-    display.display();
-    fanState = true;
-  }
+  if (fanState == true) return;
+
+  digitalWrite(FAN_PIN, HIGH);
+  display.setTextSize(1);
+  display.fillRect(48, 56, 30, 8, SH110X_BLACK);
+  display.setCursor(48, 56);
+  display.print(F("ON"));
+  display.display();
+  fanState = true;
 }
 
 // Turn fan off and update display
 void fanOff()
 {
-  if (fanState != false)
-  {
-    digitalWrite(FAN_PIN, LOW);
-    display.setTextSize(1);
-    display.fillRect(48, 56, 30, 8, SH110X_BLACK);
-    display.setCursor(48, 56);
-    display.print(F("OFF"));
-    display.display();
-    fanState = false;
-  }
+  if (fanState == false) return;
+
+  digitalWrite(FAN_PIN, LOW);
+  display.setTextSize(1);
+  display.fillRect(48, 56, 30, 8, SH110X_BLACK);
+  display.setCursor(48, 56);
+  display.print(F("OFF"));
+  display.display();
+  fanState = false;
 }
 
 // Set position of servo to open flap
@@ -362,41 +347,26 @@ void checkForTempProblems()
   }
 }
 
-// Checks if buttons were pressed and set flags accordingly
-void checkButtons()
+// Checks when button is pressed UP after pressed DOWN
+bool checkButton(byte button) {
+  if (!digitalRead(button) == true)
+  {
+    if (prevButtonPressed == 0) prevButtonPressed = button;
+  } else if (prevButtonPressed == button) 
+  {
+    prevButtonPressed = 0;
+    return true;
+  }
+  return false;
+}
+
+// Checks if buttons were pressed and return pressed button
+byte checkButtons()
 {
-  buttonUpState = !digitalRead(BUTTON_UP);
-  if (buttonUpState == true && prevButtonUpState == false)
-  {
-    buttonUpPressed = true;
-    prevButtonUpState = true;
-  }
-  else if (buttonUpState == false && prevButtonUpState == true)
-  {
-    prevButtonUpState = false;
-  }
-
-  buttonDownState = !digitalRead(BUTTON_DOWN);
-  if (buttonDownState == true && prevButtonDownState == false)
-  {
-    buttonDownPressed = true;
-    prevButtonDownState = true;
-  }
-  else if (buttonDownState == false && prevButtonDownState == true)
-  {
-    prevButtonDownState = false;
-  }
-
-  buttonSelectState = !digitalRead(BUTTON_SELECT);
-  if (buttonSelectState == true && prevButtonSelectState == false)
-  {
-    buttonSelectPressed = true;
-    prevButtonSelectState = true;
-  }
-  else if (buttonSelectState == false && prevButtonSelectState == true)
-  {
-    prevButtonSelectState = false;
-  }
+  if (checkButton(BUTTON_UP)) return BUTTON_UP;
+  if (checkButton(BUTTON_DOWN)) return BUTTON_DOWN;
+  if (checkButton(BUTTON_SELECT)) return BUTTON_SELECT;
+  return 0;
 }
 
 // Gets temperature readings from the sensors and draws them on the display.
@@ -430,7 +400,7 @@ void measureTemperatures()
 // If up/down button was pressed, change target temp accordingly
 void updateTargetTemperature()
 {
-  if (buttonUpPressed == true)
+  if (buttonPressed == BUTTON_UP)
   {
     target = target + 5;
     if (target > maxtemp)
@@ -438,9 +408,9 @@ void updateTargetTemperature()
       target = maxtemp;
     }
     updateTarget = true;
-    buttonUpPressed = false;
+    buttonPressed = 0;
   }
-  if (buttonDownPressed == true)
+  if (buttonPressed == BUTTON_DOWN)
   {
     target = target - 5;
     if (target < 0)
@@ -448,7 +418,7 @@ void updateTargetTemperature()
       target = 0;
     }
     updateTarget = true;
-    buttonDownPressed = false;
+    buttonPressed = 0;
   }
 
   // Only write changes to display when something actually changed.
@@ -489,21 +459,20 @@ void writeSerialData() {
 
   // then write the mode setting
   serial_mode_buf[0] = '\0';
-  if(operatingMode == MODE_IDLE)
+  switch (operatingMode)
   {
+  case MODE_IDLE:
     strcat(serial_mode_buf, "IDLE");
-  }
-  else if(operatingMode == MODE_HEATING)
-  {
+    break;
+  case MODE_HEATING:
     strcat(serial_mode_buf, "HEAT");
-  }
-  else if(operatingMode == MODE_COOLING)
-  {
+    break;
+  case MODE_COOLING:
     strcat(serial_mode_buf, "COOL");
-  }
-  else if(operatingMode == MODE_FAN)
-  {
+    break;
+  case MODE_FAN:
     strcat(serial_mode_buf, " FAN");
+    break;
   }
   strcat(serial_output, serial_mode_buf);
   Serial.println(serial_output);
@@ -551,7 +520,6 @@ void setup()
   pinMode(BUTTON_DOWN, INPUT_PULLUP);
 
   // Initialize servo and move around
-  servo.attach(SERVO_PIN);
   servoOpen();
 
   // Initialize serial for logging purposes.
@@ -568,7 +536,7 @@ void setup()
 void loop()
 {
   // Check if any of the buttons were pressed
-  checkButtons();
+  buttonPressed = checkButtons();
 
   // Read current temperatures from sensors, if set time has passed since last
   // check As this operation takes quite some time, we'll only do it every few
@@ -608,14 +576,14 @@ void loop()
   }
 
   // If Select-button is pressed, change modes from 1 to 4
-  if (buttonSelectPressed)
+  if (buttonPressed == BUTTON_SELECT)
   {
     operatingMode++;
     if (operatingMode > 3)
     {
       operatingMode = 0;
     }
-    buttonSelectPressed = false;
+    buttonPressed = 0;
     changeMode = true;
   }
 
