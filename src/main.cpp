@@ -134,15 +134,6 @@ const unsigned char PROGMEM logo24_idle[]{
 #define TEMP_ERROR 0 
 #define SENSOR_ERROR 1
 
-const uint8_t err_lines_len = 2;
-static const char temp_err_1[] PROGMEM = {"Overtemp. detected."};
-static const char temp_err_2[] PROGMEM = {""};
-static const char *const temp_err_table[] PROGMEM = {temp_err_1, temp_err_2};
-
-static const char sensor_err_1[] PROGMEM = {"Sensor error! Are"};
-static const char sensor_err_2[] PROGMEM = {"they wired correctly?"};
-static const char *const sensor_err_table[] PROGMEM = {sensor_err_1, sensor_err_2};
-
 // Functions for drawing the individual symbols on the display.
 
 void drawHeatingSymbol()
@@ -312,13 +303,14 @@ void showError(byte err_text_mode)
     display.setTextSize(3);
     display.println(F("ERROR!"));
     display.setTextSize(1);
-    for (uint8_t i=0; i < err_lines_len; i++) {
-      if (err_text_mode == TEMP_ERROR){
-        display.println(reinterpret_cast<const __FlashStringHelper *>(temp_err_table[i]));
-      } else if (err_text_mode == SENSOR_ERROR) {
-        display.println(reinterpret_cast<const __FlashStringHelper *>(sensor_err_table[i]));
-      }
+
+    if (err_text_mode == TEMP_ERROR){
+      display.println(F("Overtemp. detected."));
+    } else if (err_text_mode == SENSOR_ERROR) {
+      display.println(F("Sensor error! Are"));
+      display.println(F("they wired correctly?"));
     }
+
     display.println(F("Shutting down heater."));
     display.println(F("Please powercycle!"));
     display.display();
