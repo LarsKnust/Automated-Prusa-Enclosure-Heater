@@ -4,6 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 .vscode/extensions.json
+.DS_Store
 lib/
 test/
 include/
