@@ -18,6 +18,7 @@ V1.4
 
 // Include neccessary libraries
 #include <Arduino.h>
+#include <avr/wdt.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
 #include <DallasTemperature.h>
@@ -577,10 +578,19 @@ void setup()
     // monitor program will capture it.
     Serial.println(F("Target Temp,Case Temp,Heater Temp,Mode"));
   }
+
+# ifdef WATCHDOG
+  // Enable the watchdog with a timeout of 4 seconds
+  wdt_enable(WDTO_4S);
+# endif
 }
 
 void loop()
 {
+# ifdef WATCHDOG
+  // Reset the watchdog 
+  wdt_reset();
+# endif
   // Check if any of the buttons were pressed
   checkButtons();
 
