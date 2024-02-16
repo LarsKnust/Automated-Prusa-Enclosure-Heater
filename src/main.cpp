@@ -336,6 +336,11 @@ void checkForTempProblems()
       display.println(F("Please powercycle!"));
       display.display();
       delay(1000);
+
+# ifdef WATCHDOG
+      // Reset the watchdog 
+      wdt_reset();
+# endif
     }
   }
   else if (caseTemp <= undertemp || heaterTemp <= undertemp)
@@ -374,6 +379,11 @@ void checkForTempProblems()
       display.println(F("Please powercycle!"));
       display.display();
       delay(1000);
+
+# ifdef WATCHDOG
+      // Reset the watchdog 
+      wdt_reset();
+# endif
     }
   }
 }
