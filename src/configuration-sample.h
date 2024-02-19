@@ -38,6 +38,7 @@ error! The address that's written here is just an example.
 // "detaching" before and after every move. The defined time here ist effectively a delay
 // which gives the servo time to move. If you need more than ~750ms, you should
 // expect the software to noticably "lag" when the servo is moving.
+// *** DON'T USE VALUE MORE THAN 3500, IF YOU ACTIVATE WATCHDOG ***
 #define SERVO_MOVING_MS 500
 
 // Definitions of pins on which buttons are connected
@@ -97,3 +98,14 @@ error! The address that's written here is just an example.
 // *** DO NOT ADJUST IF NOT NECCESSARY FOR YOUR SETUP ***
 #define SENSOR_ERROR_UNDERTEMP_C -20
 #define SENSOR_ERROR_UNDERTEMP_F -4
+
+// SAFETY FEATURE
+
+// In rarely case the Nano could stuck in work. In in heating mode, relays stay closed.
+// Heater and fan will work without control, that could cause fire.
+// To prevent that we are using internal watchdog. If firmware doesn't respond more than 4 seconds,
+// then we initiate reset of board.
+// *** DO NOT ACTIVATE IF YOUR BOARD nanoatmega328, USE ONLY WITH nanoatmega328new ***
+// OTHERWISE THAT BROKE YOUR NANO
+
+// #define WATCHDOG
