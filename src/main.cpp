@@ -29,6 +29,7 @@ V1.5
 // Include configuartion file.
 // Remember to rename (see above)!
 #include <configuration.h>
+#include <Utils.hpp>
 
 // Declaration of variables
 // Do not set values here, they are set in configuration.h
@@ -302,6 +303,7 @@ void showError(byte err_text_mode) {
     display.display();
     is_black = !is_black;
     delay(1000);
+    resetWatchdog();
   }
 }
 
@@ -491,17 +493,12 @@ void setup() {
     Serial.println(F("Target Temp,Case Temp,Heater Temp,Mode"));
   }
 
-#ifdef WATCHDOG
-  // Enable the watchdog with a timeout of 4 seconds
-  wdt_enable(WDTO_4S);
-#endif
+  enableWatchdog();
 }
 
-void loop() {
-#ifdef WATCHDOG
-  // Reset the watchdog
-  wdt_reset();
-#endif
+void loop()
+{
+  resetWatchdog();
   // Check if any of the buttons were pressed
   buttonPressed = checkButtons();
 
