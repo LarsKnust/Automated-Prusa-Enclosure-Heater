@@ -65,8 +65,7 @@ bool changeMode = true;
 // Declaration of states of actuators
 bool heaterState = false;
 bool fanState = false;
-bool servoState = false;  // Servo closed
-bool closeServo = true;
+bool servoState = false; // Servo closed
 
 // Flags for recurring events
 bool updateTarget = false;
@@ -224,11 +223,39 @@ void fanOn() {
   fanState = true;
 }
 
+// Set external fan speed
+void externalFanOn()
+{
+  if ((caseTemp - target) >= 3) {
+    analogWrite(EXTERNAL_FAN_PIN, 255);
+    return;
+  }
+
+  switch (caseTemp - target) {
+    case 0:
+      analogWrite(EXTERNAL_FAN_PIN, 50);
+      break;
+    case 1:
+      analogWrite(EXTERNAL_FAN_PIN, 100);
+      break;
+    case 2:
+      analogWrite(EXTERNAL_FAN_PIN, 175);
+      break;
+  }
+}
+
+// Set external fan speed
+void externalFanOff()
+{
+  analogWrite(EXTERNAL_FAN_PIN, 0);
+}
+
 // Turn fan off and update display
 void fanOff() {
   if (fanState == false) return;
 
   digitalWrite(FAN_PIN, LOW);
+  analogWrite(EXTERNAL_FAN_PIN, 0);
   display.setTextSize(1);
   display.fillRect(48, 56, 30, 8, SH110X_BLACK);
   display.setCursor(48, 56);
@@ -371,20 +398,20 @@ void measureTemperatures() {
 // If up/down button was pressed, change target temp accordingly
 void updateTargetTemperature() {
   if (buttonPressed == BUTTON_UP) {
-    target = target + 5;
-    if (target > maxtemp) {  // Limit target temperature to maxtemp
+    target = target + 1;
+    if (target > maxtemp) { // Limit target temperature to maxtemp
       target = maxtemp;
     }
     updateTarget = true;
-    buttonPressed = 0;
   }
-  if (buttonPressed == BUTTON_DOWN) {
-    target = target - 5;
-    if (target < 0) {  // Limit target to positive temperatures
+  if (buttonPressed == BUTTON_DOWN)
+  {
+    target = target - 1;
+    if (target < 0)
+    { // Limit target to positive temperatures
       target = 0;
     }
     updateTarget = true;
-    buttonPressed = 0;
   }
 
   // Only write changes to display when something actually changed.
@@ -544,19 +571,25 @@ void loop()
     if (operatingMode > 3) {
       operatingMode = 0;
     }
-    buttonPressed = 0;
     changeMode = true;
   }
 
   /*******************************************************
   ################ IDLE MODE - DO NOTHING ################
   *******************************************************/
-  if (operatingMode == MODE_IDLE && changeMode == true) {
-    changeMode = false;
-    drawIdleSymbol();
-    servoClose();
-    fanOff();
-    heaterOff();
+  if (operatingMode == MODE_IDLE)
+  {
+    if (changeMode == true)
+    {
+      changeMode = false;
+      drawIdleSymbol();
+      servoClose();
+      fanOff();
+      externalFanOff();
+      heaterOff();
+    }
+    if (buttonPressed == BUTTON_UP && servoState == false) servoOpen();
+    if (buttonPressed == BUTTON_DOWN && servoState == true) servoClose();
   }
 
   // /*******************************************************
@@ -567,6 +600,7 @@ void loop()
       changeMode = false;
       drawHeatingSymbol();
       servoClose();
+      externalFanOff();
     }
 
     // Adjustment of target temperature
@@ -574,44 +608,42 @@ void loop()
 
     // Check if case temperature is lower or higher than target
     // and turn heater on or off accordingly.
-    // The multiple calls of servoClose are a clumsy workaround for
-    // keeping the servo quiet (by not keeping it attached the whole time)
-    // but also resetting it to the closed position after it sometimes
-    // randomly moves when the relays turn on, as they seem to interfere with
-    // it.
-
-    if (caseTemp <= lowerlimit) {
-      if (heaterState == false) {
-        closeServo = true;
-      }
+    if (caseTemp <= lowerlimit)
+    {
       heaterOn();
       fanOn();
-      if (closeServo == true) {
-        servoClose();
-        closeServo = false;
-      }
-    } else if (caseTemp >= upperlimit) {
-      if (heaterState == true) {
-        closeServo = true;
-      }
+    }
+    else if (caseTemp >= upperlimit)
+    {
       heaterOff();
       fanOff();
-      if (closeServo == true) {
-        servoClose();
-        closeServo = false;
-      }
     }
   }
 
   // /*******************************************************
   // ##### COOLING MODE - HEATER OFF, FAN ON, VENT OPEN #####
   // *******************************************************/
-  if (operatingMode == MODE_COOLING && changeMode == true) {
-    changeMode = false;
-    drawCoolingSymbol();
-    servoOpen();
-    fanOn();
-    heaterOff();
+  if (operatingMode == MODE_COOLING)
+  {
+    if (changeMode == true)
+    {
+      changeMode = false;
+      drawCoolingSymbol();
+      servoOpen();
+      heaterOff();
+      fanOff();
+    }
+
+    // Adjustment of target temperature
+    updateTargetTemperature();
+
+    // Check if case temperature is lower or higher than target
+    // and turn fan off or on accordingly.
+    if (caseTemp < target) {
+      externalFanOff();
+    } else {
+      externalFanOn();
+    }
   }
 
   // /*******************************************************
@@ -621,6 +653,7 @@ void loop()
     changeMode = false;
     drawFanSymbol();
     servoClose();
+    externalFanOff();
     fanOn();
     heaterOff();
   }

@@ -52,6 +52,7 @@ error! The address that's written here is just an example.
 #define HEATER_PIN 7
 #define FAN_PIN 6
 #define SERVO_PIN 9
+#define EXTERNAL_FAN_PIN 11
 
 // Definition of whether to use serial output logging or not, and how many
 // milliseconds between each write.
