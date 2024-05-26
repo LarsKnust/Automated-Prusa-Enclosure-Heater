@@ -1,6 +1,7 @@
 #include <Arduino.h>
+# ifdef WATCHDOG
 #include <avr/wdt.h>
-
+# endif
 #include <configuration.h>
 
 #include <Utils.hpp>
